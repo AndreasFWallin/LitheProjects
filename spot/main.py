@@ -71,12 +71,64 @@ def list_files(directory: str = DATA_DIR) -> str:
         return "\n".join(files)
     except Exception as e:
         return f"Error listing files: {str(e)}"
+# Tool to search files
+@tool
+def search_files(query: str, directory: str = DATA_DIR) -> str:
+    """Search for a query in all readable files in the directory."""
+    results = []
+    try:
+        for file in os.listdir(directory):
+            file_path = os.path.join(directory, file)
+            if file.lower().endswith('.txt'):
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        if query.lower() in content.lower():
+                            results.append(f"Found in {file}: {content[:200]}...")
+                except Exception as e:
+                    results.append(f"Error in {file}: {e}")
+            elif file.lower().endswith('.pdf'):
+                try:
+                    with open(file_path, 'rb') as f:
+                        reader = PyPDF2.PdfReader(f)
+                        text = ""
+                        for page in reader.pages:
+                            text += page.extract_text()
+                        if query.lower() in text.lower():
+                            results.append(f"Found in {file}: {text[:200]}...")
+                except Exception as e:
+                    results.append(f"Error in {file}: {e}")
+            elif file.lower().endswith('.docx'):
+                try:
+                    doc = Document(file_path)
+                    text = "\n".join([para.text for para in doc.paragraphs])
+                    if query.lower() in text.lower():
+                        results.append(f"Found in {file}: {text[:200]}...")
+                except Exception as e:
+                    results.append(f"Error in {file}: {e}")
+            elif file.lower().endswith(('.xlsx', '.xls')):
+                try:
+                    wb = openpyxl.load_workbook(file_path)
+                    text = ""
+                    for sheet in wb.worksheets:
+                        for row in sheet.iter_rows(values_only=True):
+                            text += " ".join([str(cell) if cell else "" for cell in row]) + "\n"
+                    if query.lower() in text.lower():
+                        results.append(f"Found in {file}: {text[:200]}...")
+                except Exception as e:
+                    results.append(f"Error in {file}: {e}")
+        if results:
+            return "\n\n".join(results)
+        else:
+            return "No matches found."
+    except Exception as e:
+        return f"Error searching: {str(e)}"
 
 # Initialize Ollama LLM
 llm = Ollama(model="llama2")  # Change to your preferred model
 
 # List of tools
-tools = [read_pdf, read_word, read_excel, read_text_file, list_files]
+tools = [read_pdf, read_word, read_excel, read_text_file, list_files, search_files]
 
 # Initialize the agent
 agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
