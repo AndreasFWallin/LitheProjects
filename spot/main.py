@@ -124,11 +124,58 @@ def search_files(query: str, directory: str = DATA_DIR) -> str:
     except Exception as e:
         return f"Error searching: {str(e)}"
 
+# Tool to get file info
+@tool
+def get_file_info(file_path: str) -> str:
+    """Get metadata about a file."""
+    try:
+        stat = os.stat(file_path)
+        return f"Size: {stat.st_size} bytes, Modified: {stat.st_mtime}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# Tool to summarize file content
+@tool
+def summarize_file(file_path: str) -> str:
+    """Summarize the content of a file."""
+    try:
+        if file_path.endswith('.pdf'):
+            loader = PyPDFLoader(file_path)
+            documents = loader.load()
+            content = "\n".join([doc.page_content for doc in documents])
+        elif file_path.endswith('.docx'):
+            loader = UnstructuredWordDocumentLoader(file_path)
+            documents = loader.load()
+            content = "\n".join([doc.page_content for doc in documents])
+        elif file_path.endswith(('.xlsx', '.xls')):
+            loader = UnstructuredExcelLoader(file_path)
+            documents = loader.load()
+            content = "\n".join([doc.page_content for doc in documents])
+        else:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        prompt = PromptTemplate.from_template("Summarize the following text in a few sentences: {text}")
+        chain = LLMChain(llm=llm, prompt=prompt)
+        summary = chain.run(text=content)
+        return summary
+    except Exception as e:
+        return f"Error summarizing: {str(e)}"
+
+# Tool to list files by type
+@tool
+def list_files_by_type(extension: str, directory: str = DATA_DIR) -> str:
+    """List files of a specific type in the directory."""
+    try:
+        files = [f for f in os.listdir(directory) if f.lower().endswith(extension.lower())]
+        return "\n".join(files)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
 # Initialize Ollama LLM
 llm = Ollama(model="llama2")  # Change to your preferred model
 
 # List of tools
-tools = [read_pdf, read_word, read_excel, read_text_file, list_files, search_files]
+tools = [read_pdf, read_word, read_excel, read_text_file, list_files, search_files, get_file_info, summarize_file, list_files_by_type]
 
 # Initialize the agent
 agent = initialize_agent(tools, llm, agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION, verbose=True)
