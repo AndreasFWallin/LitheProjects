@@ -2,8 +2,38 @@
 """
 JPG to PNG Converter CLI Tool
 
-A simple command-line tool for batch converting JPG images to PNG format with appropriate naming.
-Usage: python jpg2png.py [folder_path] [options]
+A simple and powerful command-line tool for batch converting JPG images to PNG format
+with intelligent naming, progress tracking, and various output options.
+
+Features:
+    - 🚀 Batch conversion: Convert multiple JPG files at once
+    - 🎯 Smart naming: Automatic PNG naming with timestamp or prefix support
+    - 📁 Recursive processing: Process subdirectories
+    - 🎨 Quality preservation: High-quality PNG output with configurable compression
+    - 📊 Progress tracking: Real-time conversion progress bar
+    - 🖥️ Cross-platform: Works on Windows, macOS, and Linux
+    - 🗂️ Organized output: Optional custom output folder
+    - 🔄 Overwrite protection: Safely handles existing files
+    - 🖱️ GUI support: Optional graphical folder picker
+
+Usage Examples:
+    Basic conversion in current directory:
+        python jpg2png.py
+
+    Convert specific folder:
+        python jpg2png.py /path/to/images
+
+    Convert with custom output folder and timestamp:
+        python jpg2png.py /path/to/images -o /path/to/output -p timestamp
+
+    Recursive conversion with GUI picker:
+        python jpg2png.py --recursive --interactive
+
+    List files that would be converted without converting:
+        python jpg2png.py /path/to/images --list-only
+
+Full Usage:
+    python jpg2png.py [folder_path] [options]
 """
 
 import os
